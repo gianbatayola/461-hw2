@@ -1,0 +1,140 @@
+---
+title: "Homework 2"
+author: "Gian Batayola"
+---
+
+```{r}
+# 1a
+# we need sqldf since we need to join price (from cars_price) and country 
+# (origin from cars_multi)
+library(sqldf)
+library(ggplot2)
+cars_price <- read.csv("cars_price.csv")
+cars_multi <- read.csv("cars_multi.csv")
+cars_merge <- sqldf("SELECT cars_multi.*, cars_price.price FROM cars_price 
+                    INNER JOIN cars_multi WHERE cars_price.ID = cars_multi.ID ")
+ggplot(cars_merge, aes(x = price)) + geom_boxplot() + 
+  labs(x = "Price", title = "Car Price Boxplot By Origin") + 
+  facet_grid(rows = .~origin)
+```
+
+```{r}
+# 1b
+ggplot(cars_multi, aes(x = weight, y = mpg)) + 
+  geom_point(aes(color = as.factor(cylinders))) + 
+  labs(x = "Weight", y = "MPG", title = "MPG vs Weight Scatterplot") 
+```
+
+```{r}
+# 2a
+# set a seed so the results are always the same
+set.seed(1) 
+sim_num <- c(1:10000)
+# assuming 4 year development cycle so rate 5/year * 4 years = 20
+drugs_discovered <- rpois(10000,20)
+drug_sim <- data.frame(sim_num, drugs_discovered)
+ggplot(data=drug_sim, aes(x=drug_sim$drugs_discovered)) + 
+  geom_histogram(color="black", fill="white") + 
+  labs(x = "Drugs Discovered (4-Years)", y = "Count", 
+       title = "Drugs Discovered (4 Years) Histogram") 
+```
+
+```{r}
+# 2b
+drugs_approved <- .15 * drugs_discovered
+drug_sim_2 <- data.frame(sim_num, drugs_approved)
+ggplot(data=drug_sim_2, aes(x=drug_sim_2$drugs_approved)) + 
+  geom_histogram(color="black", fill="white") + 
+  labs(x = "Drugs Approved (4-Years)", y = "Count", 
+       title = "Drugs Approved (4-Years) Histogram") 
+```
+
+```{r}
+# 2c
+set.seed(1)
+rate = 10000000
+unit_revenue <- rexp(10000, 1/rate)
+drug_revenue <- unit_revenue * drugs_approved
+drug_sim_3 <- data.frame(sim_num, drug_revenue)
+ggplot(data=drug_sim_3, aes(x=drug_sim_3$drug_revenue)) + 
+  geom_histogram(color="black", fill="white") + 
+  labs(x = "Drug Revenue (4-Years)", y = "Count", 
+       title = "Drugs Revenue (4-Years) Histogram") 
+```
+
+```{r}
+# 2d
+profitable <- sum(drug_revenue - 26000000 > 0)
+profitable/10000 * 100
+# 40.26% of 4-year drug discovery cycles yield profitable results 
+```
+
+```{r}
+# 2e
+set.seed(1) 
+# 6/year * 4 years
+drugs_discovered_rd <- rpois(10000,24)
+drugs_approved_rd <- .15 * drugs_discovered_rd
+rate_rd = 12000000
+unit_revenue_rd <- rexp(10000, 1/rate_rd)
+drug_revenue_rd <- unit_revenue * drugs_approved_rd
+mean(drug_revenue) # no investment
+mean(drug_revenue_rd) #r&d investment
+# investing in R&D leads to a higher revenue on average for the startup
+```
+
+```{r}
+# 3a
+# c = 1/8
+```
+
+```{r}
+# 3b
+# cdf is x^2/16
+# inverse of cdf is q(x) = 4*sqrt(x)
+set.seed(1)
+sim <- 4*sqrt(runif(10000))
+```
+
+```{r}
+# 3c
+pdf_df <- data.frame(sim_num, sim)
+ggplot(data=pdf_df, aes(x=pdf_df$sim)) + geom_histogram(color="black", 
+                                                        fill="white") + 
+  labs(x = "Outcome Value", y = "Count", title = "PDF Outcome Histogram") 
+# this aligns with what I expect of the distribution, appearing like a root
+# ramp suiting the inverse cdf
+```
+```{r}
+sim
+```
+
+```{r}
+# 3d
+ggplot(data=pdf_df, aes(x=pdf_df$sim)) + geom_density(color="black", 
+                                                        fill="white") + 
+  labs(x = "Outcome Value", y = "Proportion", title = "PDF Outcome Histogram") 
+# the appearance is changed from discrete bins is smoothed to a continuous 
+# version of the data with proportions
+```
+
+```{r}
+# 3e
+set.seed(1)
+e_approx <- mean(4 * sqrt(runif(100000)))
+e_approx
+# using equation E(X^2) - [E(X)]^2
+v_approx <- mean((4 * sqrt(runif(100000)))^2) -  (mean(4 * sqrt(runif(100000))))^2
+v_approx
+sd_approx <- sqrt(v_approx)
+sd_approx
+
+xpdf <- function(x) {x^2/8} # using integral of x * f(x) for E[X]
+integrate(xpdf, 0, 4)
+e_real <- 8/3 #this is what 2.66667 is
+
+(e_real-e_approx)/(e_real)*100
+# the approximated expected value and actual expected value are extremely close
+# with only an error of 0.0898% apart.
+```
+
